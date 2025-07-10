@@ -7,7 +7,7 @@ function App() {
     const today = new Date();
     const index = (today.getMonth() * 31 + today.getDate() - 1);
 
-    fetch('/bible.json')
+    fetch('/bible.json')  // ✅ public 안의 파일은 fetch로 접근
       .then((res) => res.json())
       .then((data) => {
         const entry = data[index % data.length];
