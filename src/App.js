@@ -1,23 +1,59 @@
 import React, { useEffect, useState } from 'react';
+import { books } from './full_books_with_verses';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
+import './Calendar.css';
 
 function App() {
-  const [chapter, setChapter] = useState('');
+  const startDate = new Date('2023-05-28');
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [url, setUrl] = useState('');
+  const [label, setLabel] = useState('');
+  const [dayNumber, setDayNumber] = useState(0);
 
   useEffect(() => {
-    const today = new Date();
-    const index = (today.getMonth() * 31 + today.getDate() - 1);
+    const diffDays = Math.floor((selectedDate - startDate) / (1000 * 60 * 60 * 24));
+    setDayNumber(diffDays + 1);
 
-    fetch('/bible.json')  // ✅ public 안의 파일은 fetch로 접근
-      .then((res) => res.json())
-      .then((data) => {
-        const entry = data[index % data.length];
-        setChapter(`${entry.book} ${entry.chapter}\n\n${entry.text}`);
-      });
-  }, []);
+    let count = diffDays;
+    for (let book of books) {
+      for (let i = 0; i < book.chapters.length; i++) {
+        if (count === 0) {
+          const chapter = i + 1;
+          const verses = book.chapters[i];
+          const verseURL = `https://ibibles.net/quote.php?kor-${book.code}/${chapter}:1-${verses}`;
+          setUrl(verseURL);
+          setLabel(`${book.name} ${chapter}장`);
+          return;
+        }
+        count--;
+      }
+    }
+
+    setUrl('');
+    setLabel('통독 범위를 벗어났습니다');
+  }, [selectedDate]);
 
   return (
     <div style={{ padding: '2rem', lineHeight: '1.6', fontSize: '18px', maxWidth: '800px', margin: 'auto' }}>
-      <pre>{chapter}</pre>
+      <h2>📖 오늘의 말씀</h2>
+      <h3>{label}</h3>
+      {url ? (
+        <iframe title="오늘의 성경" src={url} width="100%" height="300" style={{ border: 'none', marginTop: '1rem' }} />
+      ) : (
+        <p>{label}</p>
+      )}
+
+      <p style={{ marginTop: '1rem', fontWeight: 'bold' }}>
+        오늘은 통독 <strong>{dayNumber}</strong>일째입니다. 
+      </p>
+      <Calendar
+        onChange={setSelectedDate}
+        value={selectedDate}
+        maxDate={new Date()}
+        minDate={startDate}
+        locale="ko-KR"
+      />
     </div>
   );
 }
