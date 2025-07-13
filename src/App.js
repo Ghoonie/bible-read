@@ -10,6 +10,8 @@ function App() {
   const [url, setUrl] = useState('');
   const [label, setLabel] = useState('');
   const [dayNumber, setDayNumber] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const totalChapters = books.reduce((sum, book) => sum + book.chapters.length, 0);
   
 
   useEffect(() => {
@@ -20,6 +22,10 @@ function App() {
   
     const diffDays = Math.floor((selDate - sDate) / (1000 * 60 * 60 * 24));
     setDayNumber(diffDays + 1);
+
+    const readChapters = Math.min(diffDays + 1, totalChapters);
+    const percent = (readChapters / totalChapters) * 100;
+    setProgress(percent);
   
     let count = diffDays;
     for (let book of books) {
@@ -51,9 +57,21 @@ function App() {
         <p>{label}</p>
       )}
 
-      <p style={{ marginTop: '1rem', fontWeight: 'bold' }}>
-        오늘은 통독 <strong>{dayNumber}</strong>일째입니다. 
-      </p>
+      <div style={{ marginTop: '1rem', fontWeight: 'bold' }}>
+  오늘은 통독 <strong>{dayNumber}</strong>일째입니다.
+  <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+    <div style={{ flexGrow: 1, height: '12px', backgroundColor: '#ddd', borderRadius: '6px' }}>
+      <div style={{
+        height: '100%',
+        width: `${progress}%`,
+        backgroundColor: '#4caf50',
+        borderRadius: '6px',
+        transition: 'width 0.4s ease'
+      }}></div>
+    </div>
+    <span style={{ minWidth: '50px' }}>{progress.toFixed(1)}%</span>
+  </div>
+</div>
       <Calendar
         onChange={setSelectedDate}
         value={selectedDate}
