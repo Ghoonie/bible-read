@@ -5,16 +5,22 @@ import 'react-calendar/dist/Calendar.css';
 import './Calendar.css';
 
 function App() {
-  const startDate = new Date('2023-05-28');
+  const startDate = new Date('2025-07-14');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [url, setUrl] = useState('');
   const [label, setLabel] = useState('');
   const [dayNumber, setDayNumber] = useState(0);
+  
 
   useEffect(() => {
-    const diffDays = Math.floor((selectedDate - startDate) / (1000 * 60 * 60 * 24));
+    const selDate = new Date(selectedDate);
+    const sDate = new Date(startDate);
+    selDate.setHours(0, 0, 0, 0);
+    sDate.setHours(0, 0, 0, 0);
+  
+    const diffDays = Math.floor((selDate - sDate) / (1000 * 60 * 60 * 24));
     setDayNumber(diffDays + 1);
-
+  
     let count = diffDays;
     for (let book of books) {
       for (let i = 0; i < book.chapters.length; i++) {
@@ -29,10 +35,11 @@ function App() {
         count--;
       }
     }
-
+  
     setUrl('');
     setLabel('통독 범위를 벗어났습니다');
   }, [selectedDate]);
+  
 
   return (
     <div style={{ padding: '2rem', lineHeight: '1.6', fontSize: '18px', maxWidth: '800px', margin: 'auto' }}>
