@@ -7,17 +7,18 @@ function App() {
   const startDate = new Date('2025-07-14');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [bibleData, setBibleData] = useState([]);
+  const [bibleVersion, setBibleVersion] = useState('ko_mod.json');
   const [dayNumber, setDayNumber] = useState(0);
   const [progress, setProgress] = useState(0);
   const [chapterTitle, setChapterTitle] = useState('');
   const [verses, setVerses] = useState([]);
 
   useEffect(() => {
-    fetch('/ko_rev.json')
+    fetch(`/${bibleVersion}`)
       .then((res) => res.json())
       .then((data) => setBibleData(data))
       .catch((err) => console.error('Failed to load Bible:', err));
-  }, []);
+  }, [bibleVersion]);
 
   useEffect(() => {
     if (bibleData.length === 0) return;
@@ -31,7 +32,6 @@ function App() {
     const todayIndex = diffDays;
     setDayNumber(diffDays + 1);
 
-    // Flatten the total number of chapters
     const flatChapters = [];
     for (const book of bibleData) {
       for (let i = 0; i < book.chapters.length; i++) {
@@ -62,14 +62,88 @@ function App() {
     <div style={{ padding: '2rem', fontSize: '18px', maxWidth: '800px', margin: 'auto' }}>
       <h2>📖 오늘의 말씀</h2>
       <h3>{chapterTitle}</h3>
+
+      {/* 버튼: 성경 버전 전환 */}
       <div style={{ marginBottom: '1rem' }}>
-        {verses.length > 0 ? (
-          verses.map((v, i) => <p key={i}><strong>{i + 1}</strong>. {v}</p>)
-        ) : (
+        <button
+          onClick={() => setBibleVersion('ko_rev.json')}
+          style={{ marginRight: '10px', padding: '0.5rem 1rem' }}
+        >
+          개역개정 성경
+        </button>
+        <button
+          onClick={() => setBibleVersion('ko_mod.json')}
+          style={{ padding: '0.5rem 1rem' }}
+        >
+          현대인의 성경
+        </button>
+      </div>
+
+      {/* 말씀 내용 렌더링 */}
+      <div style={{ marginBottom: '1rem' }}>
+        {verses.length > 0 ? (() => {
+          let verseNumber = 1;
+          const elements = [];
+
+          for (let i = 0; i < verses.length; i++) {
+            let text = verses[i].trim();
+
+            // 제목과 본문이 같은 줄에 있는 경우
+            const titleMatch = text.match(/^<([^>]+)>\s*(.*)/);
+            if (titleMatch) {
+              const title = titleMatch[1];
+              const remainingText = titleMatch[2];
+
+              // 제목 출력
+              elements.push(
+                <p key={`title-${i}`} style={{
+                  fontWeight: 'bold',
+                  fontSize: '20px',
+                  marginTop: '1.5em',
+                  color: '#2c3e50'
+                }}>
+                  {title}
+                </p>
+              );
+
+              if (remainingText) {
+                elements.push(
+                  <p key={`verse-${i}`}>
+                    <strong>{verseNumber}</strong>. {remainingText}
+                  </p>
+                );
+                verseNumber++;
+              }
+            } else if (/^<.*>$/.test(text)) {
+              // 제목만 있는 줄
+              elements.push(
+                <p key={`title-${i}`} style={{
+                  fontWeight: 'bold',
+                  fontSize: '20px',
+                  marginTop: '1.5em',
+                  color: '#2c3e50'
+                }}>
+                  {text.replace(/[<>]/g, '')}
+                </p>
+              );
+            } else {
+              // 일반 본문
+              elements.push(
+                <p key={`verse-${i}`}>
+                  <strong>{verseNumber}</strong>. {text}
+                </p>
+              );
+              verseNumber++;
+            }
+          }
+
+          return elements;
+        })() : (
           <p>{chapterTitle}</p>
         )}
       </div>
 
+      {/* 진행도 표시 */}
       <div style={{ fontWeight: 'bold', marginBottom: '1rem' }}>
         오늘은 통독 <strong>{dayNumber}</strong>일째입니다.
         <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -86,6 +160,7 @@ function App() {
         </div>
       </div>
 
+      {/* 달력 */}
       <Calendar
         onChange={setSelectedDate}
         value={selectedDate}
